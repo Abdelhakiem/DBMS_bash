@@ -6,7 +6,7 @@ function TableCommands() {
 	do
 		case $option in 
 		"Create")
-			blank_func
+			create_table $DBName
 			;;
 		"List")
 			list_tables $DBName

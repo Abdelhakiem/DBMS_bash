@@ -9,6 +9,7 @@ source ./list_tables.sh
 source ./drop_table.sh
 source ./table_commands.sh
 source ./connect_db.sh
+source ./create_table.sh
 
 function program() {
 	select option in CreateDB ListDBs ConnectDB DropDB exit
