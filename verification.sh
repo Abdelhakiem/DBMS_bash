@@ -8,6 +8,7 @@ function num_verify() {
     else
         echo "This is not a number"
     fi
+    
 }
 
 function pk_verify() {
