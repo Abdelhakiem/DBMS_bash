@@ -4,18 +4,25 @@ source './where.sh'
 function delete_from_table(){
 	DBname=$1;
     table_name=$2;
+    file_path="Databases/$1/$2"
+    
+    if [[ ! -e $file_path ]]; then
+        echo "Table does not exist"
+        exit
+    fi
+
     read -p "Enter Condition Column" colname;
     read -p "Enter  the equality Column value" colval;
-    file_path="Databases/$1/$2";
+    
     coln=$(colmapping $DBname $table_name $colname)
-    echo "$coln"
+    
     if [[ $coln = -1 ]]; then
     echo "Col not found";
     exit;
     fi;
     
     rown=$(rowmapping $DBname $table_name $coln $colval)
-    echo "$rown"
+    
     if [[ $rown = -1 ]]; then
     echo "Row not found";
     exit;
