@@ -11,6 +11,7 @@ source ./table_commands.sh
 source ./connect_db.sh
 source ./create_table.sh
 source ./verification.sh
+source ./delete_table.sh
 
 
 function program() {

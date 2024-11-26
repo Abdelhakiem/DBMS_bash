@@ -21,7 +21,7 @@ function TableCommands() {
 			blank_func
 			;;
 		"Delete")
-			blank_func
+			delete_from_table $DBName
 			;;
 		"Update")
 			blank_func
