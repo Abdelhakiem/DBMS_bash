@@ -24,7 +24,7 @@ function TableCommands() {
 			delete_from_table $DBName
 			;;
 		"Update")
-			blank_func
+			update_table $DBName
 			;;
 		"exit")
 			break
