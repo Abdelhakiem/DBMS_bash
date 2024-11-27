@@ -15,4 +15,3 @@ function drop_table() {
 		echo "Table does not exist"
 	fi
 }
-drop_table $1
