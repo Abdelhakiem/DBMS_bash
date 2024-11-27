@@ -4,9 +4,9 @@ function num_verify() {
     numbers=$1
 
     if [[ $numbers =~ ^[0-9]+$ ]]; then
-        echo "This is a number"
+        echo true
     else
-        echo "This is not a number"
+        echo false
     fi
     
 }

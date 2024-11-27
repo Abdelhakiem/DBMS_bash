@@ -10,6 +10,7 @@ function update_table(){
 	read -p "Enter Table Name" table_name;
     
     file_path="Databases/$DBname/$table_name"
+	metafilepath="Databases/$DBname/.meta$table_name"
     
     if [[ ! -e $file_path ]]; then
         echo "Table does not exist"
@@ -25,19 +26,28 @@ function update_table(){
     echo "Col not found";
     exit;
     fi;
-
-
+	if [[ $(sed -n "$col_setn""p" "$metafilepath" | cut -f 3 -d :) = "PK" ]];then
+	echo "You cannot update a primary key";
+    return;
+	fi
+	Datatype=$(sed -n "$col_setn""p" "$metafilepath" | cut -f 2 -d :)
+	echo $Datatype
 	read -p "Enter The New Value" newval
+	if [[ $Datatype = 'number' ]]; then
 
+		if [[ $(num_verify newval) != true ]]; then 
+			echo "Invalid Datatype"
+			exit
+		fi
 
-
+	fi
     read -p "Enter Condition Column" col_cond;
     
     col_condn=$(colmapping $DBname $table_name $col_cond)
     
     if [[ $col_condn = -1 ]]; then
-    echo "Col not found";
-    exit;
+		echo "Col not found";
+		exit;
     fi;
 
 	read -p "Enter Condition Column" val_cond;
@@ -58,5 +68,3 @@ function update_table(){
 
 	cat "$file_path"
 }
- 
-update_table $1

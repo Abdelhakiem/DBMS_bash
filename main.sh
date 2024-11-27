@@ -12,8 +12,7 @@ source ./connect_db.sh
 source ./create_table.sh
 source ./verification.sh
 source ./delete_table.sh
-
-
+source ./update_table.sh
 function program() {
 	select option in CreateDB ListDBs ConnectDB DropDB exit
 	do
