@@ -17,7 +17,7 @@ function update_table(){
         exit
     fi
 
-
+	
 	read -p "Enter Column you want to set its value" col_set
 
 	col_setn=$(colmapping $DBname $table_name $col_set)

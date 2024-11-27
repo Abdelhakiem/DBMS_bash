@@ -1,6 +1,10 @@
 import subprocess
 import streamlit as st
+import pandas as pd
+import warnings  # Importing the warnings library
 
+# Suppress all warnings
+warnings.filterwarnings("ignore")
 git_bash_path = "C:\\Program Files\\Git\\bin\\bash.exe"
 
 # Placeholder functions for database operations
@@ -8,17 +12,17 @@ def create_db():
     st.success("Database created successfully!")
 
 def list_dbs():
-    
     st.info("Listing all databases...")
     # Example databases
-    results=subprocess.run([git_bash_path, "ls_dbs.sh"],capture_output=True,text=True)
-    databases =results.stdout 
-    st.write("Databases:", databases)
-    
+    results = subprocess.run([git_bash_path, "ls_dbs.sh"], capture_output=True, text=True)
+    databases = results.stdout.splitlines() 
+    st.write("Databases:")
+    st.table(databases)
 
 def connect_db(db_name):
     if db_name:
         st.success(f"Connected to the database: {db_name}")
+        st.experimental_set_query_params(page="table_commands", db_name=db_name)
     else:
         st.error("Please enter a database name to connect.")
 
@@ -54,6 +58,7 @@ def update_table():
 # Page routing
 query_params = st.experimental_get_query_params()
 page = query_params.get("page", ["main"])[0]
+db_name = query_params.get("db_name", [""])[0]
 
 if page == "main":
     st.title("Database Management")
@@ -61,27 +66,33 @@ if page == "main":
     st.write("Choose an operation:")
 
     # Buttons for database operations
-    if st.button("CreateDB"):
-        create_db()
+    with st.expander("Do You Want To Create Database"):
+        # Text input for database name (required)
+        db_name_input = st.text_input("Enter the database name:")
+        # Button to confirm creation, only enabled if db_name_input is provided
+        if db_name_input and st.button("Create DB"):
+            results = subprocess.run([git_bash_path, "create_db.sh", db_name_input], capture_output=True, text=True)
+            msg = results.stdout 
+            st.write(msg)
+        elif not db_name_input:
+            st.error("Database name is required!")
 
-    if st.button("ListDBs"):
-        list_dbs()
+    with st.expander("Do You Want To Display All Databases"):
+        if st.button("ListDBs"):
+            list_dbs()
 
-    db_name = st.text_input("Enter database name to connect:")
-    if st.button("ConnectDB"):
-        connect_db(db_name)
+    with st.expander("Connect to Database?"):
+        db_name_input = st.text_input("Enter database name to connect:")
+        if st.button("ConnectDB"):
+            connect_db(db_name_input)
 
     if st.button("DropDB"):
         drop_db()
 
-    # Navigate to table commands page
-    if st.button("Go to Table Commands"):
-        st.experimental_set_query_params(page="table_commands")
+elif page == "table_commands" and db_name:
+    st.title(f"Table Commands - {db_name}")
 
-elif page == "table_commands":
-    st.title("Table Commands")
-
-    st.write("Choose an operation:")
+    st.write("Choose a table operation:")
 
     # Buttons for table operations
     if st.button("Create Table"):
@@ -108,5 +119,3 @@ elif page == "table_commands":
     # Navigate back to the main page
     if st.button("Back to Main"):
         st.experimental_set_query_params(page="main")
-
-

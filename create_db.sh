@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function create_db(){
-	read -p "Please Enter Database Name: " DBName
+	DBName=$1
 	
 	if [ -d "Databases/$DBName" ]
 	then
@@ -11,3 +11,4 @@ function create_db(){
 		echo "Database created successfully"
 	fi	
 }
+create_db $1
