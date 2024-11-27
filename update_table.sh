@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source './where.sh'
+source './verification.sh'
 
 function update_table(){
 	
@@ -8,6 +9,9 @@ function update_table(){
 
     
 	read -p "Enter Table Name" table_name;
+	if ! validate_table_name $table_name; then
+        return 
+    fi
     
     file_path="Databases/$DBname/$table_name"
 	metafilepath="Databases/$DBname/.meta$table_name"
@@ -31,11 +35,9 @@ function update_table(){
     return;
 	fi
 	Datatype=$(sed -n "$col_setn""p" "$metafilepath" | cut -f 2 -d :)
-	echo $Datatype
 	read -p "Enter The New Value" newval
 	if [[ $Datatype = 'number' ]]; then
-
-		if [[ $(num_verify newval) != true ]]; then 
+		if [[ $(num_verify $newval) = false ]]; then 
 			echo "Invalid Datatype"
 			exit
 		fi
@@ -51,7 +53,15 @@ function update_table(){
     fi;
 
 	read -p "Enter Condition Column" val_cond;
-    
+	Datatype=$(sed -n "$col_condn""p" "$metafilepath" | cut -f 2 -d :)
+    if [[ $Datatype = 'number' ]]; then
+		if [[ $(num_verify $val_cond) = false ]]; then 
+			echo "Invalid Datatype"
+			exit
+		fi
+
+	fi
+
     newtable=$(awk -v col=$col_setn -v val=$newval -v condcol=$col_condn -v condval=$val_cond  '
 					BEGIN {
 						FS=":";

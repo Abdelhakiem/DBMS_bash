@@ -1,11 +1,14 @@
 #!/bin/bash
 source './where.sh'
-source './verification.sh'
 
 function insert_table() {
     DBname=$1
 
     read -p "Enter Table Name: " table_name
+    if ! validate_table_name $table_name; then
+        return 
+    fi
+
 
     file_path="Databases/$DBname/$table_name"
     meta_file_path="Databases/$DBname/.meta$table_name"
@@ -57,4 +60,3 @@ function insert_table() {
     echo "$row" >> "$file_path"
     echo "Row inserted successfully into $table_name."
 }
-

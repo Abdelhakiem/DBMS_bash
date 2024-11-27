@@ -12,8 +12,12 @@ source ./connect_db.sh
 source ./create_table.sh
 source ./verification.sh
 source ./delete_table.sh
+source ./insert_table.sh
+source ./select_table.sh
 source ./update_table.sh
+
 function program() {
+	clear
 	select option in CreateDB ListDBs ConnectDB DropDB exit
 	do
 		case $option in 
@@ -33,7 +37,7 @@ function program() {
 			break
 			;;
 		*)
-			echo "Wrong Input"
+			echo -e "\033[31mWrong Input!\033[0m"
 		esac
 	done
 }

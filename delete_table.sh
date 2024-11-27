@@ -6,6 +6,10 @@ function delete_from_table(){
     DBname=$1;
 
     read -p "Enter Table Name" table_name;
+   	if ! validate_table_name $table_name; then
+        return 
+    fi
+
     
     file_path="Databases/$DBname/$table_name"
     
@@ -37,4 +41,3 @@ function delete_from_table(){
 
     cat "$file_path"
 }
- 
