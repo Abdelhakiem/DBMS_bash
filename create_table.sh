@@ -2,50 +2,30 @@
 
 function create_table() {
     DBName=$1;
-	read -p "Please Enter Table Name: " CreatedTB
+	CreatedTB=$2;
+	numCol=$3;
+	IFS=';' read -r -a col_array <<< "$4"
+	IFS=';' read -r -a dtype_array <<< "$5"
+	primarykey=$6
+	((primarykey--))
+
     if [ -e "Databases/$DBName/$CreatedTB" ]; then
         echo "Table already exists."
     else
         touch "Databases/$DBName/$CreatedTB"
-        read -p "Please Enter Number of Columns: " numCol
 
         if [ "$numCol" -gt 0 ]; then
             pk=0
             for ((i = 0; i < numCol; i++)); do
                 line=""
-                read -p "Please Enter Column Name: " ColName
+                ColName="${col_array[$i]}"
                 line+=":$ColName"
-				select option in Number String
-				do
-					case $option in 
-					"Number")
-						colType="number"
-						break
-						;;
-					"String")
-						colType="string"
-						break
-						;;
-					esac
-				
-				done
+				colType="${dtype_array[$i]}"
 				line+=":$colType"
-                if [ "$pk" -eq 0 ]; then
-                    select option in yes no
-					do
-					print "Do you want to make this Column PK (y/n)? "
-					case $option in 
-					"yes")
-						line+=":PK"
-                        pk=1
-						break
-						;;
-					"no")
+                if [ "$primarykey" -eq $i ]; then
+                    	line+=":PK"
+				else
 						line+=":"
-						break
-						;;
-					esac
-				done
                 fi
 
                 echo "${line:1}" >> "Databases/$DBName/.meta$CreatedTB"
@@ -55,5 +35,5 @@ function create_table() {
         echo "Table is created successfully."
     fi
 }
-
+create_table $1 $2 $3 $4 $5 $6
   

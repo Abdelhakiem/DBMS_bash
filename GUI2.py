@@ -17,12 +17,12 @@ st.write("Enter data for the table:")
 for i in range(num_rows):
     with form:
         # Create 3 columns
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         name = col1.text_input(f"Name (Row {i + 1})", key=f"name_{i}")
         datatype = col2.selectbox("Datatype", ['number','string'], key=f"age_{i}",)
-        pk = col3.checkbox(f"Pk (Row {i + 1})",value=False,key=f"pk_{i}")
-        data.append({"Name": name, "Datatype": datatype, "Pk": pk})
-
+        data.append({"Name": name, "Datatype": datatype})
+        if i ==num_rows-1:
+            pk = st.selectbox("chose the primary key",["None"]+list(range(1,num_rows+1))),
 # Submit button
 if form.form_submit_button("Submit"):
     # Convert the collected data into a DataFrame

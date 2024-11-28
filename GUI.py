@@ -33,8 +33,10 @@ def drop_db(db_name):
     output = results.stdout
     return output
 
-def create_table():
-    st.success("Table created successfully!")
+def create_table(db_name,table_name,num_rows,colnames,dtypes,pkn):
+    results = subprocess.run([git_bash_path, "create_table.sh",db_name,table_name,str(num_rows),colnames,dtypes,str(pkn)], capture_output=True, text=True)
+    output = results.stdout
+    return output
 
 def list_tables(db_name):
     st.info("Listing all tables...")
@@ -49,7 +51,8 @@ def drop_table(db_name,table_name):
     msg = results.stdout
     return msg
     
-def insert_into_table():
+def insert_into_table(db_name,table_name,fields):
+    results = subprocess.run([git_bash_path, "insert_table.sh",db_name,table_name,fields], capture_output=True, text=True)
     st.success("Data inserted into table successfully!")
 
 def select_from_table(db_name,table_name,cond_col,cond_val):
@@ -127,7 +130,7 @@ elif page == "table_commands" and db_name:
     # Buttons for table operations
     
     with st.expander("New Table?"):
-
+        table_name=st.text_input("Enter Table name to Create:")
         num_rows = st.number_input("Number of rows", min_value=1, max_value=100, value=5)
         # Create an empty list to store user inputs
         data = []
@@ -139,20 +142,26 @@ elif page == "table_commands" and db_name:
         for i in range(num_rows):
             with form:
                 # Create 3 columns
-                col1, col2, col3 = st.columns(3)
+                col1, col2 = st.columns(2)
                 name = col1.text_input(f"Name (Row {i + 1})", key=f"name_{i}")
                 datatype = col2.selectbox("Datatype", ['number','string'], key=f"age_{i}",)
-                pk = col3.checkbox(f"Pk (Row {i + 1})",value=False,key=f"pk_{i}")
-                data.append({"Name": name, "Datatype": datatype, "Pk": pk})
-
+                data.append({"Name": name, "Datatype": datatype})
+                if i ==num_rows-1:
+                    pk = st.selectbox("chose the primary key",["None"]+list(range(1,num_rows+1))),
         # Submit button
-        if form.form_submit_button("Submit"):
-            # Convert the collected data into a DataFrame
-            df = pd.DataFrame(data)
-            st.write(";".join(df['Name'].to_list()))
-            st.write(";".join(df['Datatype'].to_list()))
-            st.table(df)
 
+        df = pd.DataFrame(data)
+        if form.form_submit_button("Submit") and all(df['Name'].to_list()):
+            # Convert the collected data into a DataFrame
+            #st.write(num_rows)
+            colnames=";".join(df['Name'].to_list())
+            #st.write(colnames)
+            dtypes=";".join(df['Datatype'].to_list())
+            #st.write(dtypes)
+            pkn=pk[0]
+            #st.write(pkn)
+            msg=create_table(db_name,table_name,num_rows,colnames,dtypes,pkn)
+            st.success(msg)
     with st.expander("Display your Tables?"):
         if st.button("List Tables"):
             msg=list_tables(db_name)
@@ -166,23 +175,43 @@ elif page == "table_commands" and db_name:
         if Drop_button and table_name:
             msg=drop_table(db_name,table_name)
             st.success(msg)
-            
-    with st.expander("Add Row?"):
-        table_name = st.text_input("Enter Table name to Add Row:")
-        display_Input_fields=st.button("Display Table Input Fields")
-        if display_Input_fields and table_name:
-            results = subprocess.run(
-                [git_bash_path, "-c", f"cut -d ':' -f 1 Databases/{db_name}/.meta{table_name}"],  # -c is required for passing commands to Git Bash
-                capture_output=True,
-                text=True)
-            fields=list()
-            for col in results.stdout.splitlines():
-                fields.append(st.text_input(f"Enter {col}"))
-            insert_button=st.button("Insert Into Table")
-            if all(fields) and insert_button:
-                msg=insert_into_table(db_name,table_name,fields)
-                st.success(msg)
+###########################################
 
+# Initialize session state for 'display_fields'
+    if "display_fields" not in st.session_state:
+        st.session_state.display_fields = False
+
+    # Expander for adding a row
+    with st.expander("Add Row?"):
+        # Input for table name
+        table_name = st.text_input("Enter Table name to Add Row:")
+
+        # Button to display input fields
+        if st.button("Display Table Input Fields", key="display_button"):
+            if table_name:
+                st.session_state.display_fields = True  # Update session state to display fields
+
+        # Check session state to display input fields
+        if st.session_state.display_fields and table_name:
+            # Run the subprocess command
+            results = subprocess.run(
+                [git_bash_path, "-c", f"cut -d ':' -f 1 Databases/{db_name}/.meta{table_name}"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            # Generate input fields for the table
+            fields = []
+            for col in results.stdout.splitlines():
+                fields.append(st.text_input(f"Enter {col}", key=f"{table_name}_{col}"))
+
+            # Button to insert into the table
+            if st.button("Insert Into Table", key="insert_button"):
+                conc_fields=";".join(fields)
+                fields=st.write(conc_fields)
+                msg = insert_into_table(db_name, table_name,conc_fields)
+                st.success(msg)
 
     with st.expander("Diplay rows?"):
         table_name = st.text_input("Enter Table name For Select")

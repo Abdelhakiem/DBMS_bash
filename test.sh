@@ -1,8 +1,19 @@
-#! /bin/bash
+#!/bin/bash
 
-input=240506
+# Example string
+col_names=$1
+col_datatypes=$2
 
-vv=$( awk -v id="$input" 'BEGIN {FS=":";}{if ($3 = $id) max="True"}END{print max;}' passwd.txt )
+# Convert string to array
+IFS=';' read -r -a col_array <<< "$col_names"
+IFS=';' read -r -a dtype_array <<< "$col_datatypes"
 
-# Use the variable in the shell
-echo "The maximum age is: $vv"
+# Print the array elements
+i=0
+for element in "${col_array[@]}"; do
+  nm="${col_array[$i]}" 
+  dt="${dtype_array[$i]}"
+  echo $nm 
+  echo $dt
+  ((i++)); 
+done;
