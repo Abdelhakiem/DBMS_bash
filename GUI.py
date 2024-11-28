@@ -127,8 +127,8 @@ elif page == "table_commands" and db_name:
     # Buttons for table operations
     
     with st.expander("New Table?"):
-        num_rows = st.number_input("Number of rows", min_value=1, max_value=100, value=5)
 
+        num_rows = st.number_input("Number of rows", min_value=1, max_value=100, value=5)
         # Create an empty list to store user inputs
         data = []
 
