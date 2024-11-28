@@ -30,27 +30,22 @@ function validate_table_name() {
 
 function validate_column_name() {
     local ColName=$1
-    local -n ColArray=$2  # Pass column names as a reference for checking duplicates
+    local -n ColArray=$2  
 
-    # Check if the column name is empty
     if [ -z "$ColName" ]; then
-        echo "Column name cannot be empty."
+        echo -e "\033[31mColumn name cannot be empty\033[0m"
         return 1
     fi
 
-    # Check if the column name contains only valid characters
     if ! [[ "$ColName" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-        echo "Invalid column name. Only letters, numbers, and underscores are allowed, and it must start with a letter or underscore."
+        echo -e "\033[31mInvalid column name.\n Only letters, numbers, and underscores are allowed,\n and it must start with a letter or underscore.\033[0m"
         return 1
     fi
-
-    # Check if the column name is already in the list (duplicate check)
     if [[ " ${ColArray[@]} " =~ " $ColName " ]]; then
-        echo "Column name '$ColName' already exists. Please enter a unique name."
+        echo -e "\033[31mColumn name '$ColName' already exists. Please enter a unique name.\033[0m"
         return 1
     fi
-
-    return 0  # Valid column name
+    return 0 
 }
 
 
