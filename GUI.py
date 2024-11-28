@@ -2,34 +2,34 @@ import subprocess
 import streamlit as st
 import pandas as pd
 import warnings  # Importing the warnings library
-st.set_option('deprecation.showfileUploaderEncoding', False)
+
 warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
 
 # Suppress all warnings
 warnings.filterwarnings("ignore")
-git_bash_path = "C:\\Program Files\\Git\\bin\\bash.exe"
+git_bash_path = "./"
 DBName=None
 # Placeholder functions for database operations
 def create_db(db_name):
-    results = subprocess.run([git_bash_path, "create_db.sh", db_name], capture_output=True, text=True)
+    results = subprocess.run([ "./create_db.sh", db_name], capture_output=True, text=True)
     return results.stdout
 
 def list_dbs():
     st.info("Listing all databases...")
     # Example databases
-    results = subprocess.run([git_bash_path, "ls_dbs.sh"], capture_output=True, text=True)
+    results = subprocess.run(["./ls_dbs.sh"], capture_output=True, text=True)
     databases = results.stdout.splitlines() 
     st.write("Databases:")
     st.table(databases)
 
 def connect_db(db_name):
-    results = subprocess.run([git_bash_path, "connect_db.sh",db_name], capture_output=True, text=True)
+    results = subprocess.run(["./connect_db.sh",db_name], capture_output=True, text=True)
     msg=results.stdout.strip()
     return msg
     
 
 def drop_db(db_name):
-    results = subprocess.run([git_bash_path, "drop_db.sh",db_name], capture_output=True, text=True)
+    results = subprocess.run(["./drop_db.sh",db_name], capture_output=True, text=True)
     output = results.stdout
     return output
 
@@ -39,13 +39,13 @@ def create_table():
 def list_tables(db_name):
     st.info("Listing all tables...")
     # Example tables
-    results = subprocess.run([git_bash_path, "list_tables.sh",db_name], capture_output=True, text=True)
+    results = subprocess.run([ "./list_tables.sh",db_name], capture_output=True, text=True)
     tables = results.stdout.splitlines()
     st.write("Tables:")
     st.table(tables)
 
 def drop_table(db_name,table_name):
-    results = subprocess.run([git_bash_path, "drop_table.sh",db_name,table_name], capture_output=True, text=True)
+    results = subprocess.run([ "./drop_table.sh",db_name,table_name], capture_output=True, text=True)
     msg = results.stdout
     return msg
     
@@ -53,17 +53,18 @@ def insert_into_table():
     st.success("Data inserted into table successfully!")
 
 def select_from_table(db_name,table_name,cond_col,cond_val):
-    results = subprocess.run([git_bash_path, "select_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
+    st.write(subprocess.run([ "pwd"], capture_output=True, text=True).stdout)
+    results = subprocess.run([ "./select_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
     msg = results.stdout
     return msg
 
 def delete_from_table(db_name,table_name,cond_col,cond_val):
-    results = subprocess.run([git_bash_path, "delete_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
+    results = subprocess.run([ "./delete_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
     msg = results.stdout
     return msg
 
 def update_table(db_name,table_name,update_col,update_val,cond_col,cond_val):
-    results = subprocess.run([git_bash_path, "update_table.sh",db_name,table_name,update_col,update_val,cond_col,cond_val], capture_output=True, text=True)
+    results = subprocess.run([ "./update_table.sh",db_name,table_name,update_col,update_val,cond_col,cond_val], capture_output=True, text=True)
     msg = results.stdout
     st.write(msg)
     return msg
@@ -149,7 +150,8 @@ elif page == "table_commands" and db_name:
         display_Input_fields=st.button("Display Table Input Fields")
         if display_Input_fields and table_name:
             results = subprocess.run(
-                [git_bash_path, "-c", f"cut -d ':' -f 1 Databases/{db_name}/.meta{table_name}"],  # -c is required for passing commands to Git Bash
+                ["cut", "-d", ":", "-f", "1", f"Databases/{db_name}/.meta{table_name}"]
+                ,  # -c is required for passing commands to Git Bash
                 capture_output=True,
                 text=True)
             fields=list()
@@ -171,9 +173,10 @@ elif page == "table_commands" and db_name:
             msg=select_from_table(db_name,table_name,cond_col,cond_val)
             if ":" in msg:
                 results = subprocess.run(
-                [git_bash_path, "-c", f"cut -d ':' -f 1 Databases/{db_name}/.meta{table_name}"],  # -c is required for passing commands to Git Bash
+                ["cut", "-d", ":", "-f", "1", f"Databases/{db_name}/.meta{table_name}"],
                 capture_output=True,
-                text=True)
+                text=True
+                )
                 cols=results.stdout.splitlines()
                 st.write(cols)
                 df=pd.DataFrame(list(map(lambda msg: msg.split(":"), msg.splitlines())),columns=cols)
@@ -218,3 +221,4 @@ elif page == "table_commands" and db_name:
     if st.button("<-- Back to Main"):
         db_name=None
         st.experimental_set_query_params(page="main")
+

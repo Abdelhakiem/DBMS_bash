@@ -55,5 +55,3 @@ function create_table() {
         echo "Table is created successfully."
     fi
 }
-
-  
