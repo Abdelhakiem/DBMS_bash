@@ -2,8 +2,7 @@
 
 function drop_table() {
 	DBName=$1
-	read -p "Please Enter Table Name: " TableName
-	
+	TableName=$2	
 	if [ -f "Databases/$DBName/$TableName" ]
 	then
 	# drop the table 
@@ -15,3 +14,4 @@ function drop_table() {
 		echo "Table does not exist"
 	fi
 }
+drop_table "$1" "$2"

@@ -4,9 +4,10 @@ source './where.sh'
 function delete_from_table(){
 	
     DBname=$1;
+    table_name=$2;
+    colname=$3
+    colval=$4
 
-    read -p "Enter Table Name" table_name;
-    
     file_path="Databases/$DBname/$table_name"
     
     if [[ ! -e $file_path ]]; then
@@ -14,7 +15,6 @@ function delete_from_table(){
         exit
     fi
 
-    read -p "Enter Condition Column" colname;
     
     coln=$(colmapping $DBname $table_name $colname)
     
@@ -23,7 +23,6 @@ function delete_from_table(){
     exit;
     fi;
     
-    read -p "Enter  the equality Column value" colval;
     
     newtable=$(awk -v colnum="$coln" -v val="$colval" 'BEGIN {
         FS=":"
@@ -37,4 +36,4 @@ function delete_from_table(){
 
     cat "$file_path"
 }
- 
+delete_from_table $1 $2 $3 $4

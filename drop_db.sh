@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function delete_db(){
-	read -p "Please Enter Database Name: " DBName
+	DBName=$1
 	
 	if [ -d "Databases/$DBName" ]
 	then
@@ -11,3 +11,4 @@ function delete_db(){
 		echo "Database doesn't exist"
 	fi	
 }
+delete_db $1
