@@ -22,10 +22,19 @@ function create_table() {
             pk=0
             for ((i = 0; i < numCol; i++)); do
                 line=""
-                read -p "Please Enter Column Name: " ColName
-                line+=":$ColName"
-				select option in Number String
-				do
+				declare -a ColArray
+				while true; do
+					read -p "Please Enter Column Name: " ColName
+					if validate_column_name "$ColName" ColArray[@]; then
+						ColArray+=("$ColName")
+						line+=":$ColName"
+						break
+					else
+						echo -e "\033[31mPlease enter a valid column name.\033[0m"
+					fi
+				done
+					select option in Number String
+					do
 					case $option in 
 					"Number")
 						colType="number"
