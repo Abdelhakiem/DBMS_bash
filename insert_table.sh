@@ -14,7 +14,7 @@ function insert_table() {
     meta_file_path="Databases/$DBname/.meta$table_name"
 
     if [[ ! -e $file_path ]]; then
-        echo "Table does not exist."
+        echo -e "\033[31mTable does not exist.\033[0m"
         exit 1
     fi
 
@@ -43,13 +43,13 @@ function insert_table() {
                 if [[ $value =~ ^[0-9]+$ ]]; then
                     break
                 else
-                    echo "Invalid input. Please enter a valid number."
+        			echo -e "\033[31mInvalid input. Please enter a valid number.\033[0m"
                 fi
             elif [[ $column_type == "string" ]]; then
                 if [[ "$value" =~ ^[a-zA-Z0-9_]+$ ]]; then
                     break
                 else
-                    echo "Invalid input. Please enter a valid string."
+                 	echo -e "\033[31mInvalid input. Please enter a valid string.\033[0m"
                 fi
             fi
         done
@@ -58,5 +58,5 @@ function insert_table() {
 
     row="${row:1}"
     echo "$row" >> "$file_path"
-    echo "Row inserted successfully into $table_name."
+    echo -e "\033[32mRow inserted successfully.\033[0m"
 }

@@ -69,7 +69,6 @@ function create_table() {
                 echo "${line:1}" >> "Databases/$DBName/.meta$CreatedTB"
             done
         fi
-
-        echo "Table is created successfully."
+		echo -e "\033[32mTable is created successfully.\033[0m"
     fi
 }

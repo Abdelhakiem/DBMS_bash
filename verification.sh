@@ -1,4 +1,24 @@
 #!/bin/bash
+validate_indices() {
+    local indices=("$@")   # Passed indices as an array
+    local num_columns=$1   # Number of available columns
+    shift                  # Remove the first argument, which is num_columns
+
+    # Check if each selected index is a valid positive integer within the range of available columns
+    for index in "${indices[@]}"; do
+        if ! [[ $index =~ ^[0-9]+$ ]] || (( index < 1 || index > num_columns )); then
+            return 1  # Invalid index found
+        fi
+    done
+
+    # Check for duplicate indices
+    local unique_indices=($(printf "%s\n" "${indices[@]}" | sort -n | uniq))
+    if [[ ${#unique_indices[@]} -ne ${#indices[@]} ]]; then
+        return 2  # Duplicate indices found
+    fi
+
+    return 0  # All indices are valid
+}
 
 function validate_database_name() {
     local DBName=$1
@@ -30,7 +50,7 @@ function validate_table_name() {
 
 function validate_column_name() {
     local ColName=$1
-    local ColArray=("${!2}")  # Dereference the array passed by name
+    local ColArray=("${!2}")  
 
     if [ -z "$ColName" ]; then
         echo -e "\033[31mColumn name cannot be empty.\033[0m"
