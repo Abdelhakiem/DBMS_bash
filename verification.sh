@@ -1,8 +1,79 @@
 #!/bin/bash
+validate_indices() {
+    local indices=("$@")   # Passed indices as an array
+    local num_columns=$1   # Number of available columns
+    shift                  # Remove the first argument, which is num_columns
+
+    # Check if each selected index is a valid positive integer within the range of available columns
+    for index in "${indices[@]}"; do
+        if ! [[ $index =~ ^[0-9]+$ ]] || (( index < 1 || index > num_columns )); then
+            return 1  # Invalid index found
+        fi
+    done
+
+    # Check for duplicate indices
+    local unique_indices=($(printf "%s\n" "${indices[@]}" | sort -n | uniq))
+    if [[ ${#unique_indices[@]} -ne ${#indices[@]} ]]; then
+        return 2  # Duplicate indices found
+    fi
+
+    return 0  # All indices are valid
+}
+
+function validate_database_name() {
+    local DBName=$1
+    if [ -z "$DBName" ]; then
+        echo  "Database name cannot be empty"
+        return 1
+    fi
+    if ! [[ "$DBName" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        echo -e "Invalid data base name.\n Only letters, numbers, and underscores are allowed,\n and it must start with a letter or underscore."
+        return 1
+    fi
+    return 0 
+}
+
+function validate_table_name() {
+    local TableName=$1
+
+    if [ -z "$TableName" ]; then
+        echo -e "Table name cannot be empty"
+        return 1
+    fi
+    if ! [[ "$TableName" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        echo -e "Invalid table name.\n Only letters, numbers, and underscores are allowed,\n and it must start with a letter or underscore."
+        return 1
+    fi
+    return 0  
+}
+
+
+function validate_column_name() {
+    local ColName=$1
+    local ColArray=("${!2}")  
+
+    if [ -z "$ColName" ]; then
+        echo -e "Column name cannot be empty."
+        return 1
+    fi
+
+    if ! [[ "$ColName" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        echo -e "Invalid column name.\nOnly letters, numbers, and underscores are allowed,\nand it must start with a letter or underscore."
+        return 1
+    fi
+
+    if [[ " ${ColArray[@]} " =~ " $ColName " ]]; then
+        echo -e "Column name '$ColName' already exists. Please enter a unique name."
+        return 1
+    fi
+
+    return 0
+}
+
+
 
 function num_verify() {
     numbers=$1
-
     if [[ $numbers =~ ^[0-9]+$ ]]; then
         echo true
     else
@@ -36,4 +107,3 @@ function pk_verify() {
         echo "Please enter a value";
     fi;
 }
-

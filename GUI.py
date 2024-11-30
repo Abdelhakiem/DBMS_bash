@@ -1,6 +1,7 @@
 import subprocess
 import streamlit as st
 import pandas as pd
+import time
 import warnings  # Importing the warnings library
 st.set_option('deprecation.showfileUploaderEncoding', False)
 warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
@@ -24,7 +25,7 @@ def list_dbs():
 
 def connect_db(db_name):
     results = subprocess.run([git_bash_path, "connect_db.sh",db_name], capture_output=True, text=True)
-    msg=results.stdout.strip()
+    msg=results.stdout
     return msg
     
 
@@ -39,12 +40,23 @@ def create_table(db_name,table_name,num_rows,colnames,dtypes,pkn):
     return output
 
 def list_tables(db_name):
-    st.info("Listing all tables...")
+    loadingholder=st.empty()
+    listing=loadingholder.info("Listing all tables...")
     # Example tables
+    time.sleep(1)
+    loadingholder.empty()
     results = subprocess.run([git_bash_path, "list_tables.sh",db_name], capture_output=True, text=True)
-    tables = results.stdout.splitlines()
-    st.write("Tables:")
-    st.table(tables)
+    msg = results.stdout
+    if "Database doesn't exist" in msg:
+        st.error("Database doesn't exist")
+    else:
+        msg = results.stdout.splitlines()
+        if len(msg)>0:
+            st.write("Existing tables:")
+            st.table({"Tables Names":msg})
+        else:
+            st.error("No tables found in the database")
+
 
 def drop_table(db_name,table_name):
     results = subprocess.run([git_bash_path, "drop_table.sh",db_name,table_name], capture_output=True, text=True)
@@ -53,22 +65,21 @@ def drop_table(db_name,table_name):
     
 def insert_into_table(db_name,table_name,fields):
     results = subprocess.run([git_bash_path, "insert_table.sh",db_name,table_name,fields], capture_output=True, text=True)
-    st.success("Data inserted into table successfully!")
+    return results.stdout
 
 def select_from_table(db_name,table_name,cond_col,cond_val):
     results = subprocess.run([git_bash_path, "select_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
     msg = results.stdout
     return msg
 
-def delete_from_table(db_name,table_name,cond_col,cond_val):
-    results = subprocess.run([git_bash_path, "delete_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
+def delete_from_table(db_name,table_name,cond_col,operator,cond_val):
+    results = subprocess.run([git_bash_path, "delete_table.sh",db_name,table_name,cond_col,operator,cond_val], capture_output=True, text=True)
     msg = results.stdout
     return msg
 
-def update_table(db_name,table_name,update_col,update_val,cond_col,cond_val):
-    results = subprocess.run([git_bash_path, "update_table.sh",db_name,table_name,update_col,update_val,cond_col,cond_val], capture_output=True, text=True)
+def update_table(db_name,table_name,update_col,update_val,cond_col,operator,cond_val):
+    results = subprocess.run([git_bash_path, "update_table.sh",db_name,table_name,update_col,update_val,cond_col,operator,cond_val], capture_output=True, text=True)
     msg = results.stdout
-    st.write(msg)
     return msg
 
 # Page routing
@@ -89,7 +100,10 @@ if page == "main":
         # Button to confirm creation, only enabled if db_name_input is provided
         if db_name_input and st.button("Create DB"):
             msg=create_db(db_name_input)
-            st.warning(msg)
+            if "succ" in msg:
+                st.success(msg)
+            else:
+                st.error(msg)
         elif not db_name_input:
             st.error("Database name is required!")
 
@@ -104,8 +118,7 @@ if page == "main":
             st.warning("Enter Database Name")
         if connect_button and db_name_input:
             msg=connect_db(db_name_input)
-            st.write(msg=="Database Connected Successfully")
-            if msg=="Database Connected Successfully":
+            if "Successfully" in msg:
                 st.success(f"Connected to the database: {db_name_input}")
                 st.experimental_set_query_params(page="table_commands", db_name=db_name_input)
             else:
@@ -119,7 +132,10 @@ if page == "main":
             st.warning("Enter Database")
         if Drop_button and db_name_input:
             msg=drop_db(db_name_input)
-            st.warning(msg)
+            if "succ" in msg:
+                st.success(f"{msg}")
+            else:
+                st.error(msg)
         
 
 elif page == "table_commands" and db_name:
@@ -151,7 +167,10 @@ elif page == "table_commands" and db_name:
         # Submit button
 
         df = pd.DataFrame(data)
-        if form.form_submit_button("Submit") and all(df['Name'].to_list()):
+        submit_button=form.form_submit_button("Submit")
+        if submit_button and not all(df['Name'].to_list()):
+            st.warning("Please fill all Column names!!")
+        if submit_button and all(df['Name'].to_list()):
             # Convert the collected data into a DataFrame
             #st.write(num_rows)
             colnames=";".join(df['Name'].to_list())
@@ -161,7 +180,13 @@ elif page == "table_commands" and db_name:
             pkn=pk[0]
             #st.write(pkn)
             msg=create_table(db_name,table_name,num_rows,colnames,dtypes,pkn)
-            st.success(msg)
+            if "succ" in msg:
+                st.success(msg)
+            else:
+                st.error(msg)
+        
+
+    
     with st.expander("Display your Tables?"):
         if st.button("List Tables"):
             msg=list_tables(db_name)
@@ -174,7 +199,10 @@ elif page == "table_commands" and db_name:
             st.warning("Enter Database")
         if Drop_button and table_name:
             msg=drop_table(db_name,table_name)
-            st.success(msg)
+            if "Successfully" in msg:
+                st.success(msg)
+            else:
+                st.error(msg)
 ###########################################
 
 # Initialize session state for 'display_fields'
@@ -205,13 +233,18 @@ elif page == "table_commands" and db_name:
             fields = []
             for col in results.stdout.splitlines():
                 fields.append(st.text_input(f"Enter {col}", key=f"{table_name}_{col}"))
-
+            insert_button=st.button("Insert Into Table", key="insert_button")
+            if insert_button and not all(fields):
+                st.warning("Please fill all fields")
             # Button to insert into the table
-            if st.button("Insert Into Table", key="insert_button"):
+            if insert_button and all(fields):
                 conc_fields=";".join(fields)
-                fields=st.write(conc_fields)
+                #st.write(conc_fields)
                 msg = insert_into_table(db_name, table_name,conc_fields)
-                st.success(msg)
+                if "succ" in msg:
+                    st.success(msg)
+                else:
+                    st.error(msg)
 
     with st.expander("Diplay rows?"):
         table_name = st.text_input("Enter Table name For Select")
@@ -237,32 +270,105 @@ elif page == "table_commands" and db_name:
         
 
     with st.expander("Delete from table?"):
+        
         table_name = st.text_input("Enter Table name to Delete From:")
-        cond_col = st.text_input("Enter Condition Column:")
-        cond_val = st.text_input("Enter Condition Value:")
-        delete_button=st.button("Delete From Table")
-        if delete_button and table_name and cond_col and cond_val:
-            st.write("Deleting......")
-            delete_from_table(db_name,table_name,cond_col,cond_val)
-        if delete_button and not (table_name and cond_col and cond_val):
-            st.warning("Enter All inputs")
+        meta_file_path=f"Databases/{db_name}/.meta{table_name}"
+        bash_script = f"""
+                        if [ -f "{meta_file_path}" ]; then
+                            echo "Table Found"
+                        else
+                            echo "Table does not exist"
+                        fi
+                        """
+        result = subprocess.run(
+                    [git_bash_path, "-c",bash_script],                    
+                    capture_output=True,
+                    text=True,
+                    check=True)
+        
+        table_existence = result.stdout.strip()
+        if "Table does not exist" in table_existence and table_name:
+            st.error("Table doesn't exist")
+        elif table_name and "Table Found" in table_existence :
+            cond_col = st.text_input("Enter Condition Column:")
+            if cond_col:
+                result = subprocess.run(
+                        [git_bash_path, "-c", 
+                        f"awk -F: -v col='{cond_col}' '{{if ($1 == col) {{print $2;exit;}}}}' \"{meta_file_path}\""],
+                        capture_output=True,
+                        text=True,
+                        check=True)
+                col_datatype = result.stdout.strip()
+                if col_datatype == "number":
+                    operators = ["=", "!=", "<", ">"]
+                else:
+                    operators = ["=", "!="]
+                operator= st.selectbox("Choose an operator:", operators)
+                cond_val = st.text_input("Enter Condition Value:")
+                delete_button=st.button("Delete From Table")
+                if delete_button and table_name and cond_col and operator and cond_val:
+                    placeholder = st.empty()
+                    placeholder.info("Deleting Rows")
+                    time.sleep(1)
+                    msg=delete_from_table(db_name,table_name,cond_col,operator,cond_val)
+                    if "Deletion successful. Updated Table:" in msg:
+                        placeholder.success(msg)
+                    else:
+                        placeholder.error(msg)
+                if delete_button and not (table_name and cond_col and operator and cond_val):
+                    st.warning("Enter All inputs")
 
 
     with st.expander("Modify Table?"):
         table_name = st.text_input("Enter Table name to Update:")
-        set_col = st.text_input("Enter Set Columns:")
-        set_val = st.text_input("Enter Set Value:")
-        cond_col = st.text_input("Enter Update Condition Column:")
-        cond_val = st.text_input("Enter Update Condition Value:")
-        update_button=st.button("Update Table")
-        if update_button:
-            if not table_name or not set_col or not set_val or not cond_col or not cond_val:
-                st.error("Please fill in all fields before updating the table.")
-            else:
-                st.info("Updating table, please wait...")
-                msg = update_table(db_name, table_name, set_col, set_val, cond_col, cond_val)
-                st.write(msg)
-
+        meta_file_path=f"Databases/{db_name}/.meta{table_name}"
+        bash_script = f"""
+                        if [ -f "{meta_file_path}" ]; then
+                            echo "Table Found"
+                        else
+                            echo "Table does not exist"
+                        fi
+                        """
+        result = subprocess.run(
+                    [git_bash_path, "-c",bash_script],                    
+                    capture_output=True,
+                    text=True,
+                    check=True)
+        
+        table_existence = result.stdout.strip()
+        if "Table does not exist" in table_existence and table_name:
+            st.error("Table doesn't exist")
+        elif table_name and "Table Found" in table_existence :
+            set_col = st.text_input("Enter Set Columns:")
+            set_val = st.text_input("Enter Set Value:")
+            cond_col = st.text_input("Enter Update Condition Column:")
+            if cond_col:
+                result = subprocess.run(
+                        [git_bash_path, "-c", 
+                        f"awk -F: -v col='{cond_col}' '{{if ($1 == col) {{print $2;exit;}}}}' \"{meta_file_path}\""],
+                        capture_output=True,
+                        text=True,
+                        check=True)
+                col_datatype = result.stdout.strip()
+                if col_datatype == "number":
+                    operators = ["=", "!=", "<", ">"]
+                else:
+                    operators = ["=", "!="]
+                operator= st.selectbox("Choose operator:", operators)
+                cond_val = st.text_input("Enter Update Condition Value:")
+                update_button=st.button("Update Table")
+                if update_button:
+                    if not table_name or not set_col or not set_val or not cond_col or not cond_val:
+                        st.error("Please fill in all fields before updating the table.")
+                    else:
+                        placeholder = st.empty()
+                        placeholder.info("Updating table, please wait...")
+                        time.sleep(1)
+                        msg = update_table(db_name, table_name, set_col, set_val, cond_col,operator,cond_val)
+                        if "Update successful." in msg:
+                            placeholder.success(msg)
+                        else:
+                            placeholder.error(msg)
 
 
 
