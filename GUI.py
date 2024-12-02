@@ -164,7 +164,7 @@ elif page == "table_commands" and db_name:
     
     with st.expander("New Table?"):
         table_name=st.text_input("Enter Table name to Create:")
-        num_rows = st.number_input("Number of rows", min_value=1, max_value=100, value=5)
+        num_rows = st.number_input("Number of rows", min_value=1, max_value=100, value=2)
         # Create an empty list to store user inputs
         data = []
 
@@ -353,7 +353,7 @@ elif page == "table_commands" and db_name:
                     operators = ["=", "!=", "<", ">"]
                 else:
                     operators = ["=", "!="]
-                operator= st.selectbox("Choose an operator:", operators)
+                operator= st.selectbox("Choose a delete operator:", operators)
                 cond_val = st.text_input("Enter Condition Value:")
                 delete_button=st.button("Delete From Table")
                 if delete_button and table_name and cond_col and operator and cond_val:

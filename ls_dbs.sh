@@ -7,3 +7,4 @@ function ls_dbs(){
         ls Databases
     fi
 }
+ls_dbs

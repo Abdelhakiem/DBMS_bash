@@ -1,0 +1,21 @@
+[33mf89f69e[m[33m ([m[1;36mHEAD -> [m[1;32mGUI[m[33m)[m HEAD@{0}: reset: moving to HEAD~1
+[33me64413d[m HEAD@{1}: commit: final isa
+[33mf89f69e[m[33m ([m[1;36mHEAD -> [m[1;32mGUI[m[33m)[m HEAD@{2}: commit: select left
+[33m3e34ed7[m HEAD@{3}: commit: Some validation left
+[33m98181c1[m HEAD@{4}: commit: version5:00
+[33m4e40cf1[m HEAD@{5}: commit: Finished GUI
+[33m082ee4d[m HEAD@{6}: commit: Create_table and Insert LEFT
+[33m0e2d155[m HEAD@{7}: commit: initial changes
+[33mcf58f0c[m HEAD@{8}: commit: GUI Initials
+[33m78d3335[m HEAD@{9}: checkout: moving from main to GUI
+[33m78d3335[m HEAD@{10}: pull --ff --recurse-submodules --progress origin: Merge made by the 'ort' strategy.
+[33m027395a[m HEAD@{11}: commit: touchaya
+[33m21cc2eb[m HEAD@{12}: commit: update without validation yet
+[33m7f217ff[m HEAD@{13}: commit: delete morethan row
+[33ma864572[m HEAD@{14}: commit: delete_table validation
+[33mabafc98[m HEAD@{15}: commit: delete_command
+[33mf2ac818[m HEAD@{16}: commit: where statement
+[33m3a61f5f[m HEAD@{17}: commit: number_verification
+[33maf4ff64[m HEAD@{18}: commit: create_table
+[33m964964a[m HEAD@{19}: commit: seperating
+[33m4fdd06e[m HEAD@{20}: clone: from https://github.com/Abdelhakiem/DBMS_bash.git
