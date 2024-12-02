@@ -13,7 +13,7 @@ select_from_where() {
     if [[ $option -eq 1 ]]; then
         local headers=$(awk -F: '{print $1}' "$meta_file_path" | tr '\n' '\t')
         echo "--------------------------------------------------------"
-        echo -e "\033[32m$headers\033[0m"
+        echo -e "$headers"
         echo "--------------------------------------------------------"
 
         table_body=$(awk 'BEGIN {
@@ -30,10 +30,6 @@ select_from_where() {
     # Filter with a specific field value using comparison operator
     elif [[ $option -eq 2 ]]; then
         local headers=$(awk -F: '{print $1}' "$meta_file_path" | tr '\n' '\t')
-        echo "--------------------------------------------------------"
-        echo -e "\033[32m$headers\033[0m"
-        echo "--------------------------------------------------------"
-
         local col_num=$4
         local operator=$5
         local col_value=$6
@@ -48,10 +44,10 @@ select_from_where() {
                     (op == "<" && $colnum < val) ||
                     (op == ">" && $colnum > val) ||
                     (op == "!=" && $colnum != val)) {
-                    for (i = 1; i <= NF; i++) {
-                        printf "%s ", $i
-                    }
-                    printf "\n"
+                    
+                        printf "%s ", $0
+                    
+                        printf "\n"
                 }
             }' "$content_file_path" | column -t)
 
@@ -94,14 +90,16 @@ select_from_where() {
     fi
     # 
 
-    echo -e "\033[33m$table_body\033[0m"
+    echo -e "$table_body"
 }
 
 # Function to select and display data from a table
 function select_table() {
     DBname=$1
+    table_name=$2
 
-    read -p "Enter Table Name: " table_name
+
+
     if ! validate_table_name "$table_name"; then
         return
     fi
@@ -204,4 +202,6 @@ function select_table() {
         esac
     done
 }
-select_table $1
+
+select_from_where "$1" "$2" "$3" "$4" "$5" "$6"
+#select_from_where "$file_path" "$meta_file_path" 2 "$col_num" "$operator" "$col_value"

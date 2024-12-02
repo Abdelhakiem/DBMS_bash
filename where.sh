@@ -21,8 +21,8 @@ result=$(awk -v val=$colname 'BEGIN{
 	}
 ' $file_path)
 echo $result;
-
 }
+
 function rowmapping(){
 DBname=$1
 table=$2

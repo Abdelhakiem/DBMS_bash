@@ -10,7 +10,21 @@ warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
 warnings.filterwarnings("ignore")
 git_bash_path = "C:\\Program Files\\Git\\bin\\bash.exe"
 DBName=None
-# Placeholder functions for database operations
+
+def colmapping(git_bash_path,db,table,col):
+    bash_script = f'''
+    source ./where.sh
+    col_num=$(colmapping "{db}" "{table}" "{col}")
+    echo $col_num
+    '''
+    results = subprocess.run(
+        [git_bash_path, "-c", bash_script],  # Combine the command
+        capture_output=True,  # Capture stdout and stderr
+        text=True  # Output as text
+    )
+    return results.stdout
+
+
 def create_db(db_name):
     results = subprocess.run([git_bash_path, "create_db.sh", db_name], capture_output=True, text=True)
     return results.stdout
@@ -67,8 +81,11 @@ def insert_into_table(db_name,table_name,fields):
     results = subprocess.run([git_bash_path, "insert_table.sh",db_name,table_name,fields], capture_output=True, text=True)
     return results.stdout
 
-def select_from_table(db_name,table_name,cond_col,cond_val):
-    results = subprocess.run([git_bash_path, "select_table.sh",db_name,table_name,cond_col,cond_val], capture_output=True, text=True)
+def select_from_table(db_name,table_name,option,cond_col,operator,cond_val):
+    cond_coln=colmapping(git_bash_path,db_name,table_name,cond_col)
+    db_path=f"Databases/{db_name}/{table_name}"
+    meta_path=f"Databases/{db_name}/.meta{table_name}"
+    results = subprocess.run([git_bash_path, "select_table.sh",db_path,meta_path,option,cond_coln,operator,cond_val], capture_output=True, text=True)
     msg = results.stdout
     return msg
 
@@ -82,7 +99,7 @@ def update_table(db_name,table_name,update_col,update_val,cond_col,operator,cond
     msg = results.stdout
     return msg
 
-# Page routing
+
 
 query_params = st.experimental_get_query_params()
 page = query_params.get("page", ["main"])[0]
@@ -248,26 +265,59 @@ elif page == "table_commands" and db_name:
 
     with st.expander("Diplay rows?"):
         table_name = st.text_input("Enter Table name For Select")
-        cond_col = st.text_input("Enter Condition Column For Select: ")
-        cond_val = st.text_input("Enter Condition Value For Select: ")
-        select_button=st.button("Select From Table")
-        if select_button and table_name and cond_col and cond_val:
-            st.write("Displaying......")
-            msg=select_from_table(db_name,table_name,cond_col,cond_val)
-            if ":" in msg:
-                results = subprocess.run(
-                [git_bash_path, "-c", f"cut -d ':' -f 1 Databases/{db_name}/.meta{table_name}"],  # -c is required for passing commands to Git Bash
-                capture_output=True,
-                text=True)
-                cols=results.stdout.splitlines()
-                st.write(cols)
-                df=pd.DataFrame(list(map(lambda msg: msg.split(":"), msg.splitlines())),columns=cols)
-                st.table(df)
-            else:
-                st.error(msg)
-        if select_button and not (table_name and cond_col and cond_val):
-            st.warning("Enter All inputs")
+        meta_file_path=f"Databases/{db_name}/.meta{table_name}"
+        bash_script = f"""
+                        if [ -f "{meta_file_path}" ]; then
+                            echo "Table Found"
+                        else
+                            echo "Table does not exist"
+                        fi
+                        """
+        result = subprocess.run(
+                    [git_bash_path, "-c",bash_script],                    
+                    capture_output=True,
+                    text=True,
+                    check=True)
         
+        table_existence = result.stdout.strip()
+        if "Table does not exist" in table_existence and table_name:
+            st.error("Table doesn't exist")
+        elif table_name and "Table Found" in table_existence :
+            cond_col = st.text_input("Enter Condition Column For Select: ")
+            if cond_col:
+                result = subprocess.run(
+                        [git_bash_path, "-c", 
+                        f"awk -F: -v col='{cond_col}' '{{if ($1 == col) {{print $2;exit;}}}}' \"{meta_file_path}\""],
+                        capture_output=True,
+                        text=True,
+                        check=True)
+                col_datatype = result.stdout.strip()
+                if col_datatype == "number":
+                    operators = ["=", "!=", "<", ">"]
+                else:
+                    operators = ["=", "!="]
+                operator= st.selectbox("Choose an operator:", operators)
+
+                cond_val = st.text_input("Enter Condition Value For Select: ")
+                select_button=st.button("Select From Table")
+                if select_button and table_name and cond_col and cond_val:
+                    placeholder=st.empty()
+                    placeholder.info("Displaying......")
+                    time.sleep(1)
+                    msg=select_from_table(db_name,table_name,"2",cond_col,operator,cond_val)
+                    if ":" in msg:
+                        results = subprocess.run(
+                        [git_bash_path, "-c", f"cut -d ':' -f 1 Databases/{db_name}/.meta{table_name}"],  # -c is required for passing commands to Git Bash
+                        capture_output=True,
+                        text=True)
+                        cols=results.stdout.splitlines()
+                        df=pd.DataFrame(list(map(lambda msg: msg.split(":"), msg.splitlines())),columns=cols)
+                        placeholder.table(df)
+                    else:
+                        st.error(msg)
+                if select_button and not (table_name and cond_col and cond_val):
+                    st.warning("Enter All inputs")
+            
 
     with st.expander("Delete from table?"):
         
